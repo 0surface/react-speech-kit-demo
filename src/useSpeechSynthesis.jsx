@@ -30,6 +30,18 @@ const useSpeechSynthesis = (props = {}) => {
     onEnd();
   };
 
+  const chunkSubstr = (str, size) => {
+    const numChunks = Math.ceil(str.length / size);
+    const chunks = new Array(numChunks);
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0, o = 0; i < numChunks; i++, o += size) {
+      chunks[i] = str.substr(o, size);
+    }
+
+    return chunks;
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       setSupported(true);
@@ -41,16 +53,24 @@ const useSpeechSynthesis = (props = {}) => {
     const { voice = null, text = '', rate = 1, pitch = 1, volume = 1 } = args;
     if (!supported) return;
     setSpeaking(true);
+
     // Firefox won't repeat an utterance that has been
     // spoken, so we need to create a new instance each time
-    const utterance = new window.SpeechSynthesisUtterance();
-    utterance.text = text;
-    utterance.voice = voice;
-    utterance.onend = handleEnd;
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.volume = volume;
-    window.speechSynthesis.speak(utterance);
+
+    const smallChunks =
+      text.length < 250 ? new Array(text) : chunkSubstr(text, 225);
+
+    smallChunks.forEach((chunk) => {
+      // console.log('chunk::', chunk.length);
+      const utterance = new window.SpeechSynthesisUtterance();
+      utterance.text = chunk;
+      utterance.voice = voice;
+      utterance.onend = handleEnd;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      utterance.volume = volume;
+      window.speechSynthesis.speak(utterance);
+    });
   };
 
   const cancel = () => {

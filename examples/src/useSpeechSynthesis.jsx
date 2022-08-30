@@ -93,7 +93,7 @@ const Example = () => {
             <textarea
               id="message"
               name="message"
-              rows={3}
+              rows={10}
               value={text}
               onChange={(event) => {
                 setText(event.target.value);
